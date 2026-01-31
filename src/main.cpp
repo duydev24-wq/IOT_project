@@ -26,7 +26,10 @@ void setup()
   // xTaskCreate( tiny_ml_task, "Tiny ML Task" ,2048  ,NULL  ,2 , NULL);
   xTaskCreate(coreiot_task, "CoreIOT Task" ,4096  ,NULL  ,2 , NULL);
   // xTaskCreate(Task_Toogle_BOOT, "Task_Toogle_BOOT", 4096, NULL, 2, NULL);
-}
+
+      xTaskCreate(led_blinky,"LED Task",2048, NULL,1,NULL);
+
+    xTaskCreate(temp_humi_monitor,"TempHumi Task",4096,NULL,1,NULL);}
 
 void loop()
 {
