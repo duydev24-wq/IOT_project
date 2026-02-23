@@ -62,6 +62,7 @@ void Webserver_stop()
     ws.closeAll();
     server.end();
     webserver_isrunning = false;
+    Serial.println("WebServer stopped");
 }
 
 void Webserver_reconnect()

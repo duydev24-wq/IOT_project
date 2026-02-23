@@ -46,30 +46,33 @@ void setupTinyML()
 
 void tiny_ml_task(void *pvParameters)
 {
-
+    SensorData_t sensorData;
     setupTinyML();
 
     while (1)
     {
-
+        if (xQueueReceive(sensorDataQueue, &sensorData, portMAX_DELAY) == pdTRUE)
+        {
         // Prepare input data (e.g., sensor readings)
         // For a simple example, let's assume a single float input
-        input->data.f[0] = glob_temperature;
-        input->data.f[1] = glob_humidity;
+        // input->data.f[0] = glob_temperature;
+        // input->data.f[1] = glob_humidity;
+            input->data.f[0] = sensorData.temperature;
+            input->data.f[1] = sensorData.humidity;
 
-        // Run inference
-        TfLiteStatus invoke_status = interpreter->Invoke();
-        if (invoke_status != kTfLiteOk)
-        {
-            error_reporter->Report("Invoke failed");
-            return;
+            // Run inference
+            TfLiteStatus invoke_status = interpreter->Invoke();
+            if (invoke_status != kTfLiteOk)
+            {
+                error_reporter->Report("Invoke failed");
+                return;
+            }
+
+            // Get and process output
+            float result = output->data.f[0];
+            Serial.print("Inference result: ");
+            Serial.println(result);
         }
-
-        // Get and process output
-        float result = output->data.f[0];
-        Serial.print("Inference result: ");
-        Serial.println(result);
-
-        vTaskDelay(5000);
+            vTaskDelay(pdMS_TO_TICKS(5000));
     }
 }

@@ -16,24 +16,70 @@ void neo_blinky(void *pvParameters){
     strip.show();
 
     while(1) {
-        if (xNeoPixelSemaphore != NULL) {
-            if (xSemaphoreTake(xNeoPixelSemaphore, portMAX_DELAY) == pdTRUE) {
-                strip.setPixelColor(0, strip.Color(255, 0, 0)); // Set pixel 0 to red
-                strip.show(); // Update the strip
-                xSemaphoreGive(xNeoPixelSemaphore);
-            }
+        // if (xSemaphoreTake(xBinarySemaphoreHumi, portMAX_DELAY) == pdTRUE) {
+        //     float humi = glob_humidity;
+        //     if (humi < 0) {
+        //         // Sensor not ready
+        //         strip.clear();
+        //         strip.show();
+        //         continue;
+        //     }
+        //     if (humi < 40.0) {
+        //         // Low humidity -> Blue
+        //         strip.setPixelColor(0, strip.Color(0, 0, 255));
+        //     }
+        //     else if (humi < 70.0) {
+        //         // Medium humidity -> Green
+        //         strip.setPixelColor(0, strip.Color(0, 255, 0));
+        //     }
+        //     else {
+        //         // High humidity -> Red
+        //         strip.setPixelColor(0, strip.Color(255, 0, 0));
+        //     }
+        //     strip.show(); // Update the strip
+        // }
+        if (xSemaphoreTake(xBinarySemaphoreNEOState[STATE_NORMAL], 0) == pdTRUE) {
+            Serial.println("NEO NORMAL");
+            strip.setPixelColor(0, strip.Color(0, 255, 0));
+            strip.show();
+            vTaskDelay(pdMS_TO_TICKS(2000));
+            strip.setPixelColor(0, strip.Color(0, 0, 0));
+            strip.show();
+            vTaskDelay(pdMS_TO_TICKS(2000));
         }
-        // Wait for 500 milliseconds
-        vTaskDelay(500);
-
-        if (xNeoPixelSemaphore != NULL) {
-            if (xSemaphoreTake(xNeoPixelSemaphore, portMAX_DELAY) == pdTRUE) {
-                strip.setPixelColor(0, strip.Color(0, 0, 0)); // Turn pixel 0 off
-                strip.show(); // Update the strip
-                xSemaphoreGive(xNeoPixelSemaphore);
-            }
+        else if (xSemaphoreTake(xBinarySemaphoreNEOState[STATE_ATTENTION], 0) == pdTRUE) {
+            Serial.println("NEO ATTENTION");
+            strip.setPixelColor(0, strip.Color(255, 255, 0));
+            strip.show();
+            vTaskDelay(pdMS_TO_TICKS(2000));
+            strip.setPixelColor(0, strip.Color(0, 0, 0));
+            strip.show();
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        }
+        else if (xSemaphoreTake(xBinarySemaphoreNEOState[STATE_WARNING], 0) == pdTRUE) {
+            Serial.println("NEO WARNING");
+            strip.setPixelColor(0, strip.Color(255, 165, 0));
+            strip.show();
+            vTaskDelay(pdMS_TO_TICKS(2000));
+            strip.setPixelColor(0, strip.Color(0, 0, 0));
+            strip.show();
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        }
+        else if (xSemaphoreTake(xBinarySemaphoreNEOState[STATE_CRITICAL], 0) == pdTRUE) {
+            Serial.println("NEO CRITICAL");
+            strip.setPixelColor(0, strip.Color(255, 0, 0));
+            strip.show();
+            vTaskDelay(pdMS_TO_TICKS(2000));
+            strip.setPixelColor(0, strip.Color(0, 0, 0));
+            strip.show();
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        }
+        else{
+            // If no state is set, turn off the LED
+            strip.setPixelColor(0, strip.Color(0, 0, 0));
+            strip.show();
         }
         // Wait for another 500 milliseconds
-        vTaskDelay(500);
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }

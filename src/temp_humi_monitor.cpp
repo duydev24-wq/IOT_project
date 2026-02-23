@@ -8,6 +8,10 @@ void temp_humi_monitor(void *pvParameters){
     Wire.begin(11, 12);
     Serial.begin(115200);
     dht20.begin();
+    uint8_t temp_state = STATE_NORMAL;
+    uint8_t humi_state = STATE_NORMAL;
+    uint8_t system_state = STATE_NORMAL;
+    SensorData_t data;
 
     while (1){
         /* code */
@@ -17,6 +21,10 @@ void temp_humi_monitor(void *pvParameters){
         float temperature = dht20.getTemperature();
         // Reading humidity
         float humidity = dht20.getHumidity();
+        data.temperature = temperature;
+        data.humidity    = humidity;
+
+        //xQueueSend(sensorDataQueue, &data, portMAX_DELAY);
 
         
 
@@ -28,9 +36,30 @@ void temp_humi_monitor(void *pvParameters){
         }
 
         //Update global variables for temperature and humidity
-        glob_temperature = temperature;
-        glob_humidity = humidity;
+        // glob_temperature = temperature;
+        // glob_humidity = humidity;
 
+        /*Use system state instead of global variables*/
+        if (temperature < 20 || temperature > 36) {
+            temp_state = STATE_CRITICAL;
+        } else if (temperature > 33 && temperature <= 36) {
+            temp_state = STATE_WARNING;
+        } else if ( temperature >= 29 && temperature <= 33.0) {
+            temp_state = STATE_ATTENTION;
+        } else {
+            temp_state = STATE_NORMAL;
+        }
+
+        if (humidity < 40 || humidity > 90) {
+            humi_state = STATE_CRITICAL;
+        } else if (humidity >= 85 && humidity <= 90) {
+            humi_state = STATE_WARNING;
+        } else if (humidity >= 75 && humidity < 85) {
+            humi_state = STATE_ATTENTION;
+        } else {
+            humi_state = STATE_NORMAL;
+        }
+        system_state = max(temp_state, humi_state);
         // Print the results
         
         Serial.print("Humidity: ");
@@ -38,9 +67,13 @@ void temp_humi_monitor(void *pvParameters){
         Serial.print("%  Temperature: ");
         Serial.print(temperature);
         Serial.println("°C");
-        
-        xSemaphoreGive(tempSemaphore);
-        vTaskDelay(5000);
+        Serial.print("System State: ");
+        Serial.println(system_state);
+        // xSemaphoreGive(xBinarySemaphoreTemp);
+        // xSemaphoreGive(xBinarySemaphoreHumi);
+        xSemaphoreGive(xBinarySemaphoreLEDState[temp_state]);
+        xSemaphoreGive(xBinarySemaphoreNEOState[humi_state]);
+        vTaskDelay(pdMS_TO_TICKS(2000));
     }
     
 }

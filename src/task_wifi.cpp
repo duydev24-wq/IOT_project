@@ -12,35 +12,56 @@ void startSTA()
 {
     if (WIFI_SSID.isEmpty())
     {
-        vTaskDelete(NULL);
+        Serial.println("SSID empty -> start AP");
+        startAP();
+        return;
     }
 
     WiFi.mode(WIFI_STA);
+    WiFi.begin(WIFI_SSID.c_str(), WIFI_PASS.c_str());
 
-    if (WIFI_PASS.isEmpty())
+    Serial.println("Connecting to WiFi...");
+
+    int retry = 0;
+    const int max_retry = 50;   // 5 giây
+
+    while (WiFi.status() != WL_CONNECTED && retry < max_retry)
     {
-        WiFi.begin(WIFI_SSID.c_str());
+        vTaskDelay(pdMS_TO_TICKS(100));
+        retry++;
+    }
+
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        Serial.println("WiFi Connected");
+        Serial.println(WiFi.localIP());
     }
     else
     {
-        WiFi.begin(WIFI_SSID.c_str(), WIFI_PASS.c_str());
+        Serial.println("WiFi Failed -> Start AP mode");
+        WiFi.disconnect(true);
+        startAP();
     }
-
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
-    //Give a semaphore here
-    xSemaphoreGive(xBinarySemaphoreInternet);
 }
+
 
 bool Wifi_reconnect()
 {
-    const wl_status_t status = WiFi.status();
-    if (status == WL_CONNECTED)
+    static bool wifiWasConnected = false; 
+
+    if (WiFi.status() == WL_CONNECTED)
     {
+        if (!wifiWasConnected)
+        {
+            Serial.println("WiFi Connected!");
+            Serial.println(WiFi.localIP());
+            wifiWasConnected = true;
+        }
         return true;
     }
-    startSTA();
-    return false;
+    else
+    {
+        wifiWasConnected = false;
+        return false;
+    }
 }

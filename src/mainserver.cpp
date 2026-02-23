@@ -13,8 +13,8 @@
 
 // String mainPage()
 // {
-//   float temperature = glob_temperature;
-//   float humidity = glob_humidity;
+//   float temperature = 25;
+//   float humidity = 50;
 //   String led1 = led1_state ? "ON" : "OFF";
 //   String led2 = led2_state ? "ON" : "OFF";
 
@@ -295,6 +295,7 @@
 //     led2_state = !led2_state;
 //     Serial.println("YOUR CODE TO CONTROL LED2");
 //   }
+// //TODO
 //   server.send(200, "application/json",
 //               "{\"led1\":\"" + String(led1_state ? "ON" : "OFF") +
 //                   "\",\"led2\":\"" + String(led2_state ? "ON" : "OFF") + "\"}");
@@ -302,8 +303,8 @@
 
 // void handleSensors()
 // {
-//   float t = glob_temperature;
-//   float h = glob_humidity;
+//   float t = 30;
+//   float h = 50;
 //   String json = "{\"temp\":" + String(t) + ",\"hum\":" + String(h) + "}";
 //   server.send(200, "application/json", json);
 // }

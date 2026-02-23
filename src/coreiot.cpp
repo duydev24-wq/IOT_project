@@ -1,13 +1,14 @@
 #include "coreiot.h"
 
 // ----------- CONFIGURE THESE! -----------
-const char* coreIOT_Server = "10.235.76.226";  
-const char* coreIOT_Token = "g7drm1amhd3dchr379xu";   // Device Access Token
+const char* coreIOT_Server = "app.coreiot.io";  
+const char* coreIOT_Token = "aw84kht70nil2989jmde";   // Device Access Token
 const int   mqttPort = 1883;
 // ----------------------------------------
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
 
 
 void reconnect() {
@@ -106,25 +107,54 @@ void setup_coreiot(){
 
 }
 
-void coreiot_task(void *pvParameters){
+// void coreiot_task(void *pvParameters){
+
+//     setup_coreiot();
+
+//     while(1){
+
+//         if (!client.connected()) {
+//             reconnect();
+//         }
+//         client.loop();
+
+//         // Sample payload, publish to 'v1/devices/me/telemetry'
+//         String payload = "{\"temperature\":" + String(glob_temperature) +  ",\"humidity\":" + String(glob_humidity) + "}";
+        
+//         client.publish("v1/devices/me/telemetry", payload.c_str());
+
+
+        
+//         Serial.println("Published payload: " + payload);
+//         vTaskDelay(10000);  // Publish every 10 seconds
+//     }
+// }
+void coreiot_task(void *pvParameters)
+{
+    SensorData_t recvData;
 
     setup_coreiot();
 
-    while(1){
-
+    while (1)
+    {
         if (!client.connected()) {
             reconnect();
         }
         client.loop();
 
-        // Sample payload, publish to 'v1/devices/me/telemetry'
-        String payload = "{\"temperature\":" + String(glob_temperature) +  ",\"humidity\":" + String(glob_humidity) + "}";
-        
-        client.publish("v1/devices/me/telemetry", payload.c_str());
+        // Chờ dữ liệu mới từ sensor task
+        if (xQueueReceive(sensorDataQueue, &recvData, portMAX_DELAY) == pdPASS)
+        {
+            String payload = "{";
+            payload += "\"temperature\":" + String(recvData.temperature);
+            payload += ",\"humidity\":" + String(recvData.humidity);
+            payload += "}";
 
+            client.publish("v1/devices/me/telemetry", payload.c_str());
 
-        
-        Serial.println("Published payload: " + payload);
-        vTaskDelay(10000);  // Publish every 10 seconds
+            Serial.println("Published payload: " + payload);
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(10000));
     }
 }
