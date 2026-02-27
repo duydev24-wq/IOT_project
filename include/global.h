@@ -6,8 +6,8 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 
-// extern float glob_temperature;
-// extern float glob_humidity;
+extern float glob_temperature;
+extern float glob_humidity;
 //Task3: Use system state insted of global variables
 #define STATE_NORMAL 0
 #define STATE_ATTENTION 1

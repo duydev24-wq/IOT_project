@@ -9,7 +9,5 @@
 
 void CORE_IOT_sendata(String mode, String feed, String data);
 void CORE_IOT_reconnect();
-// void cloud_task(void *pvParameters);
-// void send_task(void *pvParameters);
-
+extern ThingsBoard tb;
 #endif

@@ -18,6 +18,9 @@ void setup()
 {
   Serial.begin(115200);
   //check_info_File(0);
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.setAutoReconnect(true);
+  WiFi.persistent(true);
   if (check_info_File(0))   // 0 = load file
   {
       startSTA();           // ✅ gọi ở đây
@@ -45,12 +48,34 @@ void setup()
 }
 void loop()
 {
-  if (check_info_File(1))
-  {
-    if (Wifi_reconnect())
+    if (check_info_File(1))
     {
-      CORE_IOT_reconnect();
+        Wifi_reconnect();          // luôn kiểm tra
+
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            CORE_IOT_reconnect();  // chỉ reconnect khi có WiFi
+        }
+
+        tb.loop();                 // ⚠️ luôn chạy, không đặt trong if
+
+        static unsigned long lastSend = 0;
+
+        if (millis() - lastSend > 5000)
+        {
+            lastSend = millis();
+
+            if (WiFi.status() == WL_CONNECTED && tb.connected())
+            {
+                CORE_IOT_sendata("telemetry", "temperature", String(glob_temperature));
+                CORE_IOT_sendata("telemetry", "humidity", String(glob_humidity));
+                String json = "{\"temperature\":" + String(glob_temperature) + 
+                  ",\"humidity\":" + String(glob_humidity) + "}";
+                Webserver_sendata(json);
+            }
+        }
     }
-  }
-  Webserver_reconnect();
+    ws.cleanupClients();   
+    Webserver_reconnect();
+    delay(1);
 }
