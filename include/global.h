@@ -6,8 +6,8 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 
-extern float glob_temperature;
-extern float glob_humidity;
+// extern float glob_temperature;
+// extern float glob_humidity;
 //Task3: Use system state insted of global variables
 #define STATE_NORMAL 0
 #define STATE_ATTENTION 1
@@ -26,6 +26,8 @@ extern String password;
 extern boolean isWifiConnected;
 extern SemaphoreHandle_t xBinarySemaphoreInternet;
 extern QueueHandle_t sensorDataQueue;
+extern QueueHandle_t cloudQueue;
+extern QueueHandle_t webserverQueue;
 // extern SemaphoreHandle_t xBinarySemaphoreTemp;
 // extern SemaphoreHandle_t xBinarySemaphoreHumi;
 extern SemaphoreHandle_t xBinarySemaphoreNEOState[STATE_SIZE];
@@ -35,3 +37,5 @@ typedef struct {
     float humidity;
 } SensorData_t;
 #endif
+
+/* global.h - header file for global variables and definitions */

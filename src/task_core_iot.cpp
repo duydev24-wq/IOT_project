@@ -119,58 +119,33 @@ void CORE_IOT_reconnect()
     }
 }
 
-// void cloud_task(void *pvParameters)
-// {
-//     while (1)
-//     {
-//         if (xSemaphoreTake(xBinarySemaphoreInternet, pdMS_TO_TICKS(100)) == pdTRUE)
-//         {
-//             if (WiFi.status() != WL_CONNECTED)
-//             {
-//                 Wifi_reconnect();
-//                 Serial.println("WiFi reconnected");
-//             }
+void CloudTask(void *pvParameters)
+{
+    SensorData_t data;
 
-//             if (WiFi.status() == WL_CONNECTED)
-//             {
-//                 Serial.println("WiFi is connected");
-//                 CORE_IOT_reconnect();
-//                 tb.loop();
-//             }
-
-//             Webserver_reconnect();
-
-//             xSemaphoreGive(xBinarySemaphoreInternet);
-//         }
-
-//         vTaskDelay(pdMS_TO_TICKS(50));
-//     }
-// }
-
-
-// void send_task(void *pvParameters)
-// {
-//     SensorData_t data;
-
-//     while (1)
-//     {
-//         if (xQueueReceive(sensorDataQueue, &data, portMAX_DELAY) == pdTRUE)
-//         {
-//             if (xSemaphoreTake(xBinarySemaphoreInternet, pdMS_TO_TICKS(200)) == pdTRUE)
-//             {
-//                 if (WiFi.status() == WL_CONNECTED && tb.connected())
-//                 {
-//                     CORE_IOT_sendata("telemetry", "temperature", String(data.temperature));
-//                     CORE_IOT_sendata("telemetry", "humidity", String(data.humidity));
-//                     Serial.println("Sent data to ThingsBoard: Temperature = " + String(data.temperature) + ", Humidity = " + String(data.humidity));
-//                 }
-//                 Serial.println("Web Server Connection");
-//                 xSemaphoreGive(xBinarySemaphoreInternet);
-//             }
-//         }
-//     }
-// }
-
-
-
-
+    while(1)
+    {
+    // ---- Phần quản lý kết nối Cloud ----
+        if (check_info_File(1))
+        {
+            if (Wifi_reconnect())
+            {
+                CORE_IOT_reconnect();
+            }
+            tb.loop();  // MQTT keep-alive
+            // ---- Nhận dữ liệu FIFO ----
+            if (xQueueReceive(cloudQueue, &data, pdMS_TO_TICKS(100)) == pdTRUE)
+            {
+                if (WiFi.status() == WL_CONNECTED && tb.connected())
+                {
+                    CORE_IOT_sendata("telemetry", "temperature", String(data.temperature));
+                    CORE_IOT_sendata("telemetry", "humidity", String(data.humidity));
+                }
+            }
+        }
+        else
+        {
+            vTaskDelay(pdMS_TO_TICKS(1000));  // Delay if not connected to avoid busy loop
+        }
+    }
+}

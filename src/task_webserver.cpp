@@ -47,11 +47,11 @@ void connnectWSV()
     ws.onEvent(onEvent);
     server.addHandler(&ws);
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(LittleFS, "/index.html", "text/html"); });
+    { request->send(LittleFS, "/index.html", "text/html"); });
     server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(LittleFS, "/script.js", "application/javascript"); });
+    { request->send(LittleFS, "/script.js", "application/javascript"); });
     server.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(LittleFS, "/styles.css", "text/css"); });
+    { request->send(LittleFS, "/styles.css", "text/css"); });
     server.begin();
     ElegantOTA.begin(&server);
     webserver_isrunning = true;
@@ -72,4 +72,23 @@ void Webserver_reconnect()
         connnectWSV();
     }
     ElegantOTA.loop();
+}
+
+void WebTask(void *pvParameters)
+{
+    SensorData_t data;
+    while (1)
+    {
+        if (xQueueReceive(webserverQueue, &data, pdMS_TO_TICKS(100)) == pdTRUE)
+        {
+            String json = "{\"temperature\":" + String(data.temperature) +
+                    ",\"humidity\":" + String(data.humidity) + "}";
+
+            Webserver_sendata(json); // Gửi dữ liệu đến tất cả client WebSocket
+        }
+
+        ElegantOTA.loop(); // Cần gọi loop của ElegantOTA để xử lý các yêu cầu OTA
+        ws.cleanupClients(); // Dọn dẹp các client đã ngắt kết nối để tránh rò rỉ bộ nhớ
+        vTaskDelay(pdMS_TO_TICKS(100));  // Delay to avoid busy loop
+    }
 }

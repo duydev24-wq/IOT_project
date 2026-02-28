@@ -99,21 +99,6 @@ window.addEventListener('load', function () {
         levelColorsGradient: true,
         levelColors: ["#42A5F5", "#00BCD4", "#0288D1"]
     });
-
-    // setInterval(() => {
-    //     gaugeTemp.refresh(Math.floor(Math.random() * 15) + 20);
-    //     gaugeHumi.refresh(Math.floor(Math.random() * 40) + 40);
-    // }, 3000);
-    // setInterval(() => {
-
-    // fetch("/getData")   // nếu bạn làm API riêng từ ESP32 hoặc server
-    //     .then(res => res.json())
-    //     .then(data => {
-    //         gaugeTemp.refresh(data.temperature);
-    //         gaugeHumi.refresh(data.humidity);
-    //     });
-        
-    // }, 3000);
 });
 
 
