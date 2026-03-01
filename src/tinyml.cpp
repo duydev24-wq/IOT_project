@@ -51,7 +51,7 @@ void tiny_ml_task(void *pvParameters)
 
     while (1)
     {
-        if (xQueueReceive(sensorDataQueue, &sensorData, portMAX_DELAY) == pdTRUE)
+        if (xQueueReceive(tinymlQueue, &sensorData, pdMS_TO_TICKS(100)) == pdTRUE)
         {
         // Prepare input data (e.g., sensor readings)
         // For a simple example, let's assume a single float input

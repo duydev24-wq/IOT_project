@@ -3,10 +3,28 @@ DHT20 dht20;
 LiquidCrystal_I2C lcd(33,16,2);
 
 
-void temp_humi_monitor(void *pvParameters){
+void display_system_state(uint8_t system_state){
+    if (system_state == 0){
+        Serial.println("System is in NORMAL state.");
+    }
+    else if (system_state == 1)
+    {
+        Serial.println("System is in ATTENTION state.");
+    }
+    else if (system_state == 2)
+    {
+        Serial.println("System is in WARNING state.");
+    }
+    else if (system_state == 3)
+    {
+        Serial.println("System is in CRITICAL state.");
+    }
+}
 
-    Wire.begin(11, 12);
-    Serial.begin(115200);
+void temp_humi_monitor(void *pvParameters){
+    char line[50];
+    uint8_t anomaly = 0;
+
     dht20.begin();
     uint8_t temp_state = STATE_NORMAL;
     uint8_t humi_state = STATE_NORMAL;
@@ -43,31 +61,35 @@ void temp_humi_monitor(void *pvParameters){
 
             if (data.humidity < 40 || data.humidity > 90) {
                 humi_state = STATE_CRITICAL;
-            } else if (data.humidity >= 85 && data.humidity <= 90) {
+            } else if (data.humidity >= 80 && data.humidity <= 90) {
                 humi_state = STATE_WARNING;
-            } else if (data.humidity >= 75 && data.humidity < 85) {
+            } else if (data.humidity >= 70 && data.humidity < 80) {
                 humi_state = STATE_ATTENTION;
             } else {
                 humi_state = STATE_NORMAL;
             }
             system_state = max(temp_state, humi_state);
-            // Print the results
-            
-            Serial.print("Humidity: ");
-            Serial.print(data.humidity);
-            Serial.print("%  Temperature: ");
-            Serial.print(data.temperature);
-            Serial.println("°C");
-            Serial.print("System State: ");
-            Serial.println(system_state);
+            if (system_state == STATE_WARNING || system_state == STATE_CRITICAL){
+                anomaly = 1;
+            }else {
+                anomaly = 0;
+            }
+            snprintf(line, sizeof(line), "%.2f,%.2f,%d",
+            data.temperature,
+            data.humidity,
+            anomaly);
+
+            Serial.println(line);
+            //Serial.println("°C");
+            display_system_state(system_state);
             // Send data to queues
-            xQueueSend(cloudQueue, &data, pdMS_TO_TICKS(100));
-            xQueueSend(webserverQueue, &data, pdMS_TO_TICKS(100));   
+            xQueueSend(webcloudQueue, &data, pdMS_TO_TICKS(100));
+            xQueueSend(tinymlQueue, &data, pdMS_TO_TICKS(100));
             // Signal other tasks based on state
             xSemaphoreGive(xBinarySemaphoreLEDState[temp_state]);
             xSemaphoreGive(xBinarySemaphoreNEOState[humi_state]);
     }
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
     
 }

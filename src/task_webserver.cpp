@@ -73,22 +73,3 @@ void Webserver_reconnect()
     }
     ElegantOTA.loop();
 }
-
-void WebTask(void *pvParameters)
-{
-    SensorData_t data;
-    while (1)
-    {
-        if (xQueueReceive(webserverQueue, &data, pdMS_TO_TICKS(100)) == pdTRUE)
-        {
-            String json = "{\"temperature\":" + String(data.temperature) +
-                    ",\"humidity\":" + String(data.humidity) + "}";
-
-            Webserver_sendata(json); // Gửi dữ liệu đến tất cả client WebSocket
-        }
-
-        ElegantOTA.loop(); // Cần gọi loop của ElegantOTA để xử lý các yêu cầu OTA
-        ws.cleanupClients(); // Dọn dẹp các client đã ngắt kết nối để tránh rò rỉ bộ nhớ
-        vTaskDelay(pdMS_TO_TICKS(100));  // Delay to avoid busy loop
-    }
-}

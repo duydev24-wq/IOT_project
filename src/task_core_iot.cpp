@@ -119,7 +119,7 @@ void CORE_IOT_reconnect()
     }
 }
 
-void CloudTask(void *pvParameters)
+void Web_CloudTask(void *pvParameters)
 {
     SensorData_t data;
 
@@ -134,12 +134,15 @@ void CloudTask(void *pvParameters)
             }
             tb.loop();  // MQTT keep-alive
             // ---- Nhận dữ liệu FIFO ----
-            if (xQueueReceive(cloudQueue, &data, pdMS_TO_TICKS(100)) == pdTRUE)
+            if (xQueueReceive(webcloudQueue, &data, pdMS_TO_TICKS(100)) == pdTRUE)
             {
                 if (WiFi.status() == WL_CONNECTED && tb.connected())
                 {
                     CORE_IOT_sendata("telemetry", "temperature", String(data.temperature));
                     CORE_IOT_sendata("telemetry", "humidity", String(data.humidity));
+                    String json = "{\"temperature\":" + String(data.temperature) +
+                    ",\"humidity\":" + String(data.humidity) + "}";
+                    Webserver_sendata(json); // Gửi dữ liệu đến tất cả client WebSocket
                 }
             }
         }
@@ -147,5 +150,7 @@ void CloudTask(void *pvParameters)
         {
             vTaskDelay(pdMS_TO_TICKS(1000));  // Delay if not connected to avoid busy loop
         }
+        ElegantOTA.loop(); // Cần gọi loop của ElegantOTA để xử lý các yêu cầu OTA
+        ws.cleanupClients(); // Dọn dẹp các client đã ngắt kết nối để tránh rò rỉ bộ nhớ
     }
 }

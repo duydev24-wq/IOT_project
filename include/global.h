@@ -5,7 +5,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
-
 // extern float glob_temperature;
 // extern float glob_humidity;
 //Task3: Use system state insted of global variables
@@ -26,10 +25,9 @@ extern String password;
 extern boolean isWifiConnected;
 extern SemaphoreHandle_t xBinarySemaphoreInternet;
 extern QueueHandle_t sensorDataQueue;
-extern QueueHandle_t cloudQueue;
-extern QueueHandle_t webserverQueue;
-// extern SemaphoreHandle_t xBinarySemaphoreTemp;
-// extern SemaphoreHandle_t xBinarySemaphoreHumi;
+extern QueueHandle_t webcloudQueue;
+extern QueueHandle_t tinymlQueue;
+
 extern SemaphoreHandle_t xBinarySemaphoreNEOState[STATE_SIZE];
 extern SemaphoreHandle_t xBinarySemaphoreLEDState[STATE_SIZE];
 typedef struct {

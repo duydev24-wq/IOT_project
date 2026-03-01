@@ -18,5 +18,5 @@ SemaphoreHandle_t xBinarySemaphoreNEOState[STATE_SIZE];
 SemaphoreHandle_t xBinarySemaphoreInternet = xSemaphoreCreateBinary();
 
 QueueHandle_t sensorDataQueue;
-QueueHandle_t cloudQueue;
-QueueHandle_t webserverQueue;
+QueueHandle_t webcloudQueue;
+QueueHandle_t tinymlQueue;
