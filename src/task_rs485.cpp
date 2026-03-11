@@ -104,34 +104,34 @@ void Task_Send_data(void *pvParameters)
     {
         if (!state)
         {
-            Serial.println("🟢 Đang bật từng relay...");
+            Serial.println("🟢 Turning on each relay...");
             for (int i = 0; i < 4; i++)
             {
                 sendModbusCommand(relay_ON[i], sizeof(relay_ON[i]));
-                Serial.println("Bật relay " + String(i));
-                vTaskDelay(1000 / portTICK_PERIOD_MS); // Giữ 1 giây giữa mỗi lần bật
+                Serial.println("Turning on relay " + String(i));
+                vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait 1 second between each relay on
             }
         }
         else
         {
-            Serial.println("🔴 Đang tắt từng relay...");
+            Serial.println("🔴 Turning off each relay...");
             for (int i = 0; i < 4; i++)
             {
                 sendModbusCommand(relay_OFF[i], sizeof(relay_OFF[i]));
-                Serial.println("Tắt relay " + String(i));
-                vTaskDelay(1000 / portTICK_PERIOD_MS); // Giữ 1 giây giữa mỗi lần tắt
+                Serial.println("Turning off relay " + String(i));
+                vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait 1 second between each relay off
             }
         }
 
         if (!state)
-            Serial.println("✅ Hoàn tất bật tất cả relay!");
+            Serial.println("✅ All relays turned on!");
         else
-            Serial.println("✅ Hoàn tất tắt tất cả relay!");
+            Serial.println("✅ All relays turned off!");
 
-        // Đảo trạng thái cho lần kế tiếp
+        // Toggle state for the next cycle
         state = !state;
 
-        // Nghỉ giữa 2 chu kỳ (3 giây)
+        // Wait between cycles (3 seconds)
         vTaskDelay(3000 / portTICK_PERIOD_MS);
     }
 }

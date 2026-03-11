@@ -12,11 +12,11 @@ broker_config = {
     },
     'sys_interval': 10,
     'auth': {
-        'allow-anonymous': True  # Cho phép kết nối không cần user/pass
+        'allow-anonymous': True  # Allow connections without user/pass
     },
     'topic-check': {
         'enabled': True,
-        'plugins': ['topic_taboo'] # Dùng plugin tích hợp
+        'plugins': ['topic_taboo'] # Use built-in plugin
     }
 }
 

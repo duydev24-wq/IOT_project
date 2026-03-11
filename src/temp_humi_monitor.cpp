@@ -44,7 +44,7 @@ void temp_humi_monitor(void *pvParameters){
         if (isnan(data.temperature) || isnan(data.humidity)) {
             Serial.println("Failed to read from DHT sensor!");
             data.temperature = data.humidity =  -1;
-            return;
+            continue;// Skip the rest of the loop and try again
         }
         else {
             Serial.println("DHT20 sensor read successfully!");
@@ -80,10 +80,10 @@ void temp_humi_monitor(void *pvParameters){
             anomaly);
 
             Serial.println(line);
-            //Serial.println("°C");
             display_system_state(system_state);
             // Send data to queues
-            xQueueSend(webcloudQueue, &data, pdMS_TO_TICKS(100));
+            xQueueSend(cloudQueue, &data, pdMS_TO_TICKS(100));
+            xQueueSend(webserverQueue, &data, pdMS_TO_TICKS(100));   
             xQueueSend(tinymlQueue, &data, pdMS_TO_TICKS(100));
             // Signal other tasks based on state
             xSemaphoreGive(xBinarySemaphoreLEDState[temp_state]);

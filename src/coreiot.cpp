@@ -8,7 +8,7 @@ const int   mqttPort = 1883;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-
+#define LED_PIN 2
 
 
 void reconnect() {
@@ -36,51 +36,92 @@ void reconnect() {
 }
 
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.println("] ");
+// void callback(char* topic, byte* payload, unsigned int length) {
+//   Serial.print("Message arrived [");
+//   Serial.print(topic);
+//   Serial.println("] ");
 
-  // Allocate a temporary buffer for the message
+//   // Allocate a temporary buffer for the message
+//   char message[length + 1];
+//   memcpy(message, payload, length);
+//   message[length] = '\0';
+//   Serial.print("Payload: ");
+//   Serial.println(message);
+
+//   // Parse JSON
+//   StaticJsonDocument<256> doc;
+//   DeserializationError error = deserializeJson(doc, message);
+
+//   if (error) {
+//     Serial.print("deserializeJson() failed: ");
+//     Serial.println(error.c_str());
+//     return;
+//   }
+
+//   const char* method = doc["method"];
+//   if (strcmp(method, "setStateLED") == 0) {
+//     // Check params type (could be boolean, int, or string according to your RPC)
+//     // Example: {"method": "setValueLED", "params": "ON"}
+//     const char* params = doc["params"];
+
+//     if (strcmp(params, "ON") == 0) {
+//       digitalWrite(LED_PIN, HIGH);
+//       Serial.println("Device turned ON.");
+//       //TODO
+
+//     } else {   
+//       digitalWrite(LED_PIN, LOW);
+
+//       Serial.println("Device turned OFF.");
+//       //TODO
+
+//     }
+//   } else {
+//     Serial.print("Unknown method: ");
+//     Serial.println(method);
+//   }
+// }
+//bool ledState = false;
+
+void callback(char* topic, byte* payload, unsigned int length) {
+
   char message[length + 1];
   memcpy(message, payload, length);
   message[length] = '\0';
-  Serial.print("Payload: ");
+
   Serial.println(message);
 
-  // Parse JSON
   StaticJsonDocument<256> doc;
-  DeserializationError error = deserializeJson(doc, message);
-
-  if (error) {
-    Serial.print("deserializeJson() failed: ");
-    Serial.println(error.c_str());
-    return;
-  }
+  deserializeJson(doc, message);
 
   const char* method = doc["method"];
-  if (strcmp(method, "setStateLED") == 0) {
-    // Check params type (could be boolean, int, or string according to your RPC)
-    // Example: {"method": "setValueLED", "params": "ON"}
-    const char* params = doc["params"];
 
-    if (strcmp(params, "ON") == 0) {
-      Serial.println("Device turned ON.");
-      //TODO
+  if (strcmp(method, "setValueLED") == 0) {
 
-    } else {   
-      Serial.println("Device turned OFF.");
-      //TODO
+    bool state = doc["params"];
 
-    }
-  } else {
-    Serial.print("Unknown method: ");
-    Serial.println(method);
+  //   if (state) {
+  //     digitalWrite(LED_PIN, HIGH);
+  //     ledState = true;
+  //     Serial.println("LED ON");
+  //   } else {
+  //     digitalWrite(LED_PIN, LOW);
+  //     ledState = false;
+  //     Serial.println("LED OFF");
+  //   }
+  // }
+
+  // if (strcmp(method, "getValueLED") == 0) {
+
+  //   String response = ledState ? "true" : "false";
+
+  //   client.publish("v1/devices/me/rpc/response/1", response.c_str());
   }
 }
 
-
 void setup_coreiot(){
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
 
   //Serial.print("Connecting to WiFi...");
   //WiFi.begin(wifi_ssid, wifi_password);
@@ -93,6 +134,7 @@ void setup_coreiot(){
 
   while(1){
     if (xSemaphoreTake(xBinarySemaphoreInternet, portMAX_DELAY)) {
+      Serial.println("Connected to WiFi");
       break;
     }
     delay(500);

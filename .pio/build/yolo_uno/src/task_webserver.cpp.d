@@ -221,4 +221,4 @@
  C:/Users/Admin/.platformio/packages/framework-arduinoespressif32/cores/esp32/MD5Builder.h \
  C:/Users/Admin/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/esp_rom/include/esp_rom_md5.h \
  include/task_handler.h include/task_check_info.h include/global.h \
- include/task_wifi.h
+ include/task_wifi.h include/task_wifi.h

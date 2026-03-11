@@ -4,7 +4,6 @@ var websocket;
 var gaugeTemp;
 var gaugeHumi;
 var isSocketReady = false;
-//window.addEventListener('load', onLoad);
 
 function onLoad(event) {
     initWebSocket();
@@ -35,7 +34,6 @@ function Send_Data(data) {
         console.log("📤 Gửi:", data);
     } else {
         console.warn("⚠️ WebSocket chưa sẵn sàng!");
-        //alert("⚠️ WebSocket chưa kết nối!");
     }
 }
 
@@ -43,19 +41,18 @@ function onMessage(event) {
     console.log("📩 Nhận:", event.data);
 
     try {
-        var data = JSON.parse(event.data);
+        const data = JSON.parse(event.data);
 
-        // Cập nhật gauge
-        if (data.temperature !== undefined) {
+        if (gaugeTemp && data.temperature !== undefined) {
             gaugeTemp.refresh(data.temperature);
         }
 
-        if (data.humidity !== undefined) {
+        if (gaugeHumi && data.humidity !== undefined) {
             gaugeHumi.refresh(data.humidity);
         }
 
     } catch (e) {
-        console.warn("Không phải JSON hợp lệ:", event.data);
+        console.error("JS Error:", e);
     }
 }
 
@@ -187,5 +184,5 @@ document.getElementById("settingsForm").addEventListener("submit", function (e) 
     });
 
     Send_Data(settingsJSON);
-    alert("✅ Cấu hình đã được gửi đến thiết bị!");
+    alert("✅ Configurations saved successfully!");
 });

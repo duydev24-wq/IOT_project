@@ -19,7 +19,7 @@ void setup()
     Serial.begin(921600);
     Wire.begin(11, 12);
 
-    WiFi.mode(WIFI_AP_STA); // Đặt chế độ WiFi thành AP+STA để có thể hoạt động đồng thời ở cả hai chế độ
+    WiFi.mode(WIFI_AP_STA); // Set WiFi mode to both AP and STA
 
     WiFi.setAutoReconnect(true);
     WiFi.persistent(true);
@@ -36,18 +36,20 @@ void setup()
     xBinarySemaphoreLEDState[i] = xSemaphoreCreateBinary();
     xBinarySemaphoreNEOState[i] = xSemaphoreCreateBinary();
     }
-    //sensorDataQueue = xQueueCreate(5, sizeof(SensorData_t));
-    webcloudQueue = xQueueCreate(5, sizeof(SensorData_t));
+
+    cloudQueue = xQueueCreate(5, sizeof(SensorData_t));
+    webserverQueue = xQueueCreate(5, sizeof(SensorData_t));
     tinymlQueue = xQueueCreate(5, sizeof(SensorData_t));
 
-
-    xTaskCreate(led_blinky, "Task LED Blink", 4096, NULL, 2, NULL);
-    xTaskCreate(neo_blinky, "Task NEO Blink", 2048, NULL, 2, NULL);
-    xTaskCreate(temp_humi_monitor, "Task TEMP HUMI Monitor", 4096, NULL, 2, NULL);
-    xTaskCreate(Web_CloudTask, "Task Cloud", 4096, NULL, 2, NULL);
-    xTaskCreate(Task_Toogle_BOOT, "Task Toogle Boot", 4096, NULL, 2, NULL);
-    xTaskCreate(tiny_ml_task, "Tiny ML Task" ,2048  ,NULL  ,2 , NULL);
+    xTaskCreate(led_blinky, "Task LED Blink", 4096, NULL, 2, NULL);// Create LED Blinky task
+    xTaskCreate(neo_blinky, "Task NEO Blink", 2048, NULL, 2, NULL);// Create NEO Blinky task
+    xTaskCreate(temp_humi_monitor, "Task TEMP HUMI Monitor", 4096, NULL, 2, NULL);// Create TEMP HUMI Monitor task
+    xTaskCreate(CloudTask, "Task Cloud", 4096, NULL, 2, NULL);
+    xTaskCreate(WebTask, "Task Webserver", 4096, NULL, 2, NULL);
+    xTaskCreate(Task_Toogle_BOOT, "Task Toogle Boot", 4096, NULL, 2, NULL);// Create Toogle Boot task
+    xTaskCreate(tiny_ml_task, "Tiny ML Task" ,2048  ,NULL  ,2 , NULL);// Create Tiny ML task
 }
+
 void loop()
 {
     //  Do everything in task, so we can leave it empty

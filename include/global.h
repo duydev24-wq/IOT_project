@@ -25,7 +25,8 @@ extern String password;
 extern boolean isWifiConnected;
 extern SemaphoreHandle_t xBinarySemaphoreInternet;
 extern QueueHandle_t sensorDataQueue;
-extern QueueHandle_t webcloudQueue;
+extern QueueHandle_t cloudQueue;
+extern QueueHandle_t webserverQueue;
 extern QueueHandle_t tinymlQueue;
 
 extern SemaphoreHandle_t xBinarySemaphoreNEOState[STATE_SIZE];

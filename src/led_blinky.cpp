@@ -4,40 +4,8 @@ void led_blinky(void *pvParameters) {
     pinMode(LED_GPIO, OUTPUT);
     Serial.println("LED Blinky Task Started");
     while (1) {
-        // Chờ tín hiệu từ task đo nhiệt độ và độ ẩm
-        // if (xSemaphoreTake(xBinarySemaphoreTemp, portMAX_DELAY) == pdTRUE) {
-        //     // Lấy giá trị nhiệt độ hiện tại
-        //     float temp = glob_temperature;
-
-        //     // Sensor chưa sẵn sàng
-        //     if (temp < 0) {
-        //         digitalWrite(LED_GPIO, LOW);
-        //         vTaskDelay(pdMS_TO_TICKS(1000));
-        //         continue;
-        //     }
-
-        //     // Nhiệt độ thấp → nháy chậm
-        //     if (temp < 25.0) {
-        //         digitalWrite(LED_GPIO, HIGH);
-        //         vTaskDelay(pdMS_TO_TICKS(1000));
-        //         digitalWrite(LED_GPIO, LOW);
-        //         vTaskDelay(pdMS_TO_TICKS(1000));
-        //     }
-        //     // Nhiệt độ trung bình → nháy nhanh
-        //     else if (temp < 35.0) {
-        //         digitalWrite(LED_GPIO, HIGH);
-        //         vTaskDelay(pdMS_TO_TICKS(300));
-        //         digitalWrite(LED_GPIO, LOW);
-        //         vTaskDelay(pdMS_TO_TICKS(300));
-        //     }
-        //     // Nhiệt độ cao → LED ON liên tục
-        //     else {
-        //         digitalWrite(LED_GPIO, HIGH);
-        //         vTaskDelay(pdMS_TO_TICKS(1000));
-        //     }
-        //}
         if (xSemaphoreTake(xBinarySemaphoreLEDState[STATE_NORMAL], 0) == pdTRUE) {
-            // Trạng thái bình thường → nháy xanh lá
+            // State NORMAL -> blink led once every 2 seconds
             Serial.println("LED NORMAL\n");
             digitalWrite(LED_GPIO, HIGH);
             vTaskDelay(pdMS_TO_TICKS(2000));
@@ -46,32 +14,32 @@ void led_blinky(void *pvParameters) {
             
         }
         else if (xSemaphoreTake(xBinarySemaphoreLEDState[STATE_ATTENTION], 0) == pdTRUE) {
-            // Trạng thái chú ý → nháy vàng
+            // State ATTENTION -> blink led once every 1 second
             Serial.println("LED ATTENTION\n");
             digitalWrite(LED_GPIO, HIGH);
-            vTaskDelay(pdMS_TO_TICKS(2000));
+            vTaskDelay(pdMS_TO_TICKS(1000));
             digitalWrite(LED_GPIO, LOW);
-            vTaskDelay(pdMS_TO_TICKS(2000));
+            vTaskDelay(pdMS_TO_TICKS(1000));
             
         }
         else if (xSemaphoreTake(xBinarySemaphoreLEDState[STATE_WARNING], 0) == pdTRUE) {
-            // Trạng thái cảnh báo → nháy cam
+            // State WARNING -> blink led once every 0.5 second
             Serial.println("LED WARNING\n");
             digitalWrite(LED_GPIO, HIGH);
-            vTaskDelay(pdMS_TO_TICKS(2000));
+            vTaskDelay(pdMS_TO_TICKS(500));
             digitalWrite(LED_GPIO, LOW);
-            vTaskDelay(pdMS_TO_TICKS(2000));
+            vTaskDelay(pdMS_TO_TICKS(500));
             
         }
         else if (xSemaphoreTake(xBinarySemaphoreLEDState[STATE_CRITICAL], 0) == pdTRUE) {
-            // Trạng thái nguy cấp → LED ON liên tục đỏ
+            // State CRITICAL -> LED ON continuously
             Serial.println("LED CRITICAL\n");
             digitalWrite(LED_GPIO, HIGH);
             vTaskDelay(pdMS_TO_TICKS(2000));
             
         }
         else{
-            // Không có tín hiệu → tắt LED
+            // No signal -> turn off LED
             Serial.println("LED OFF");
             digitalWrite(LED_GPIO, LOW);
             vTaskDelay(pdMS_TO_TICKS(2000));

@@ -23,7 +23,7 @@ void startSTA()
     Serial.println("Connecting to WiFi...");
 
     int retry = 0;
-    const int max_retry = 50;   // 5 giây
+    const int max_retry = 50;   // 5 seconds timeout (50 * 100ms)
 
     while (WiFi.status() != WL_CONNECTED && retry < max_retry)
     {

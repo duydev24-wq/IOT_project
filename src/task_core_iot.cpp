@@ -2,7 +2,7 @@
 #include "task_core_iot.h"
 
 constexpr uint32_t MAX_MESSAGE_SIZE = 1024U;
-
+#define LED_PIN 2
 WiFiClient wifiClient;
 Arduino_MQTT_Client mqttClient(wifiClient);
 ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
@@ -46,18 +46,39 @@ void processSharedAttributes(const Shared_Attribute_Data &data)
         // }
     }
 }
+RPC_Response getLedSwitchValue(const RPC_Data &data)
+{
+    Serial.println("RPC getLedSwitchValue called");
+
+    Serial.print("Current LED state: ");
+    Serial.println(ledState);
+
+    return RPC_Response("getLedSwitchValue", ledState);
+}
 
 RPC_Response setLedSwitchValue(const RPC_Data &data)
 {
     Serial.println("Received Switch state");
+
     bool newState = data;
+
+    ledState = newState;
+    digitalWrite(LED_PIN, ledState);
+
     Serial.print("Switch state change: ");
-    Serial.println(newState);
-    return RPC_Response("setLedSwitchValue", newState);
+    Serial.println(ledState);
+
+    if (ledState)
+        Serial.println("LED ON");
+    else
+        Serial.println("LED OFF");
+
+    return RPC_Response("setLedSwitchValue", ledState);
 }
 
-const std::array<RPC_Callback, 1U> callbacks = {
-    RPC_Callback{"setLedSwitchValue", setLedSwitchValue}};
+const std::array<RPC_Callback, 2U> callbacks = {
+    RPC_Callback{"setLedSwitchValue", setLedSwitchValue},
+    RPC_Callback{"getLedSwitchValue", getLedSwitchValue}};
 
 const Shared_Attribute_Callback attributes_callback(&processSharedAttributes, SHARED_ATTRIBUTES_LIST.cbegin(), SHARED_ATTRIBUTES_LIST.cend());
 const Attribute_Request_Callback attribute_shared_request_callback(&processSharedAttributes, SHARED_ATTRIBUTES_LIST.cbegin(), SHARED_ATTRIBUTES_LIST.cend());
@@ -85,7 +106,7 @@ void CORE_IOT_reconnect()
     {
         if (!tb.connect(CORE_IOT_SERVER.c_str(), CORE_IOT_TOKEN.c_str(), CORE_IOT_PORT.toInt()))
         {
-            // Serial.println("Failed to connect");
+            Serial.println("Failed to connect");
             return;
         }
 
@@ -94,13 +115,13 @@ void CORE_IOT_reconnect()
         Serial.println("Subscribing for RPC...");
         if (!tb.RPC_Subscribe(callbacks.cbegin(), callbacks.cend()))
         {
-            // Serial.println("Failed to subscribe for RPC");
+            Serial.println("Failed to subscribe for RPC");
             return;
         }
 
         if (!tb.Shared_Attributes_Subscribe(attributes_callback))
         {
-            // Serial.println("Failed to subscribe for shared attribute updates");
+            Serial.println("Failed to subscribe for shared attribute updates");
             return;
         }
 
@@ -108,7 +129,7 @@ void CORE_IOT_reconnect()
 
         if (!tb.Shared_Attributes_Request(attribute_shared_request_callback))
         {
-            // Serial.println("Failed to request for shared attributes");
+            Serial.println("Failed to request for shared attributes");
             return;
         }
         tb.sendAttributeData("localIp", WiFi.localIP().toString().c_str());
@@ -119,13 +140,13 @@ void CORE_IOT_reconnect()
     }
 }
 
-void Web_CloudTask(void *pvParameters)
+/*Task CloudTask used to handle core iot cloud communication*/ 
+void CloudTask(void *pvParameters)
 {
     SensorData_t data;
-
     while(1)
     {
-    // ---- Phần quản lý kết nối Cloud ----
+    // ---- Cloud connection management ----
         if (check_info_File(1))
         {
             if (Wifi_reconnect())
@@ -133,16 +154,20 @@ void Web_CloudTask(void *pvParameters)
                 CORE_IOT_reconnect();
             }
             tb.loop();  // MQTT keep-alive
-            // ---- Nhận dữ liệu FIFO ----
-            if (xQueueReceive(webcloudQueue, &data, pdMS_TO_TICKS(100)) == pdTRUE)
+            // ---- Receive FIFO data ----
+            if (xQueueReceive(cloudQueue, &data, pdMS_TO_TICKS(100)) == pdTRUE)
             {
                 if (WiFi.status() == WL_CONNECTED && tb.connected())
                 {
                     CORE_IOT_sendata("telemetry", "temperature", String(data.temperature));
                     CORE_IOT_sendata("telemetry", "humidity", String(data.humidity));
-                    String json = "{\"temperature\":" + String(data.temperature) +
-                    ",\"humidity\":" + String(data.humidity) + "}";
-                    Webserver_sendata(json); // Gửi dữ liệu đến tất cả client WebSocket
+
+                    Serial.print("Published payload: ");
+                    Serial.print("{\"temperature\":");
+                    Serial.print(data.temperature);
+                    Serial.print(",\"humidity\":");
+                    Serial.print(data.humidity);
+                    Serial.println("}");
                 }
             }
         }
@@ -150,7 +175,5 @@ void Web_CloudTask(void *pvParameters)
         {
             vTaskDelay(pdMS_TO_TICKS(1000));  // Delay if not connected to avoid busy loop
         }
-        ElegantOTA.loop(); // Cần gọi loop của ElegantOTA để xử lý các yêu cầu OTA
-        ws.cleanupClients(); // Dọn dẹp các client đã ngắt kết nối để tránh rò rỉ bộ nhớ
     }
 }

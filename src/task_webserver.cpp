@@ -1,4 +1,5 @@
 #include "task_webserver.h"
+#include "task_wifi.h"
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -9,12 +10,12 @@ void Webserver_sendata(String data)
 {
     if (ws.count() > 0)
     {
-        ws.textAll(data); // Gửi đến tất cả client đang kết nối
-        Serial.println("📤 Đã gửi dữ liệu qua WebSocket: " + data);
+        ws.textAll(data); // Send to all connected clients
+        Serial.println("📤 Data sent via WebSocket: " + data);
     }
     else
     {
-        Serial.println("⚠️ Không có client WebSocket nào đang kết nối!");
+        Serial.println("⚠️ No WebSocket clients are currently connected!");
     }
 }
 
@@ -41,19 +42,24 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
         }
     }
 }
-
 void connnectWSV()
 {
     ws.onEvent(onEvent);
     server.addHandler(&ws);
+
+    // Serve index
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-    { request->send(LittleFS, "/index.html", "text/html"); });
-    server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request)
-    { request->send(LittleFS, "/script.js", "application/javascript"); });
-    server.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request)
-    { request->send(LittleFS, "/styles.css", "text/css"); });
+    {
+        request->send(LittleFS, "/index.html", "text/html");
+    });
+
+    // Serve static files
+    server.serveStatic("/", LittleFS, "/");
+
     server.begin();
+
     ElegantOTA.begin(&server);
+
     webserver_isrunning = true;
 }
 
@@ -72,4 +78,29 @@ void Webserver_reconnect()
         connnectWSV();
     }
     ElegantOTA.loop();
+}
+
+/*Task WebTask used to handle web server communication*/ 
+void WebTask(void *pvParameters)
+{
+    SensorData_t data;
+    wifi_mode_t mode = WiFi.getMode();
+    
+    while (1)
+    {
+        if (mode == WIFI_MODE_AP)
+        {
+            if (xQueueReceive(webserverQueue, &data, pdMS_TO_TICKS(100)) == pdTRUE)
+            {
+                String json = "{\"temperature\":" + String(data.temperature) +
+                        ",\"humidity\":" + String(data.humidity) + "}";
+
+                Webserver_sendata(json); // Send data to WebSocket clients
+            }
+
+            ElegantOTA.loop(); // Handle OTA updates in AP mode
+            ws.cleanupClients(); // Cleanup clients to handle disconnections
+            vTaskDelay(pdMS_TO_TICKS(100));  // Delay to avoid busy loop
+            }
+    }
 }

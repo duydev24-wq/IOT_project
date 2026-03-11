@@ -16,29 +16,8 @@ void neo_blinky(void *pvParameters){
     strip.show();
 
     while(1) {
-        // if (xSemaphoreTake(xBinarySemaphoreHumi, portMAX_DELAY) == pdTRUE) {
-        //     float humi = glob_humidity;
-        //     if (humi < 0) {
-        //         // Sensor not ready
-        //         strip.clear();
-        //         strip.show();
-        //         continue;
-        //     }
-        //     if (humi < 40.0) {
-        //         // Low humidity -> Blue
-        //         strip.setPixelColor(0, strip.Color(0, 0, 255));
-        //     }
-        //     else if (humi < 70.0) {
-        //         // Medium humidity -> Green
-        //         strip.setPixelColor(0, strip.Color(0, 255, 0));
-        //     }
-        //     else {
-        //         // High humidity -> Red
-        //         strip.setPixelColor(0, strip.Color(255, 0, 0));
-        //     }
-        //     strip.show(); // Update the strip
-        // }
         if (xSemaphoreTake(xBinarySemaphoreNEOState[STATE_NORMAL], 0) == pdTRUE) {
+            // State NORMAL -> blink green once every 2 seconds
             Serial.println("NEO NORMAL");
             strip.setPixelColor(0, strip.Color(0, 255, 0));
             strip.show();
@@ -48,6 +27,7 @@ void neo_blinky(void *pvParameters){
             vTaskDelay(pdMS_TO_TICKS(2000));
         }
         else if (xSemaphoreTake(xBinarySemaphoreNEOState[STATE_ATTENTION], 0) == pdTRUE) {
+            // State ATTENTION -> blink yellow once every 2 seconds
             Serial.println("NEO ATTENTION");
             strip.setPixelColor(0, strip.Color(255, 255, 0));
             strip.show();
@@ -57,6 +37,7 @@ void neo_blinky(void *pvParameters){
             vTaskDelay(pdMS_TO_TICKS(2000));
         }
         else if (xSemaphoreTake(xBinarySemaphoreNEOState[STATE_WARNING], 0) == pdTRUE) {
+            // State WARNING -> blink orange once every 2 seconds
             Serial.println("NEO WARNING");
             strip.setPixelColor(0, strip.Color(255, 165, 0));
             strip.show();
@@ -66,6 +47,7 @@ void neo_blinky(void *pvParameters){
             vTaskDelay(pdMS_TO_TICKS(2000));
         }
         else if (xSemaphoreTake(xBinarySemaphoreNEOState[STATE_CRITICAL], 0) == pdTRUE) {
+            // State CRITICAL -> LED ON continuously red
             Serial.println("NEO CRITICAL");
             strip.setPixelColor(0, strip.Color(255, 0, 0));
             strip.show();

@@ -8,7 +8,7 @@ void handleWebSocketMessage(String message)
     DeserializationError error = deserializeJson(doc, message);
     if (error)
     {
-        Serial.println("❌ Lỗi parse JSON!");
+        Serial.println("❌ Error parsing JSON!");
         return;
     }
     JsonObject value = doc["value"];
@@ -16,14 +16,14 @@ void handleWebSocketMessage(String message)
     {
         if (!value.containsKey("gpio") || !value.containsKey("status"))
         {
-            Serial.println("⚠️ JSON thiếu thông tin gpio hoặc status");
+            Serial.println("⚠️ JSON missing gpio or status information");
             return;
         }
 
         int gpio = value["gpio"];
         String status = value["status"].as<String>();
 
-        Serial.printf("⚙️ Điều khiển GPIO %d → %s\n", gpio, status.c_str());
+        Serial.printf("⚙️ Controlling GPIO %d → %s\n", gpio, status.c_str());
         pinMode(gpio, OUTPUT);
         if (status.equalsIgnoreCase("ON"))
         {
@@ -44,17 +44,17 @@ void handleWebSocketMessage(String message)
         String CORE_IOT_SERVER = doc["value"]["server"].as<String>();
         String CORE_IOT_PORT = doc["value"]["port"].as<String>();
 
-        Serial.println("📥 Nhận cấu hình từ WebSocket:");
+        Serial.println("📥 Received configuration from WebSocket:");
         Serial.println("SSID: " + WIFI_SSID);
         Serial.println("PASS: " + WIFI_PASS);
         Serial.println("TOKEN: " + CORE_IOT_TOKEN);
         Serial.println("SERVER: " + CORE_IOT_SERVER);
         Serial.println("PORT: " + CORE_IOT_PORT);
 
-        // 👉 Gọi hàm lưu cấu hình
+        // 👉 Call function to save configuration
         Save_info_File(WIFI_SSID, WIFI_PASS, CORE_IOT_TOKEN, CORE_IOT_SERVER, CORE_IOT_PORT);
 
-        // Phản hồi lại client (tùy chọn)
+        // Respond back to client (optional)
         String msg = "{\"status\":\"ok\",\"page\":\"setting_saved\"}";
         ws.textAll(msg);
     }
