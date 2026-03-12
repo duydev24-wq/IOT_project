@@ -31,7 +31,10 @@ void setup()
     {
         startAP();
     }
-    connnectWSV();
+    
+    connnectWSV();// Connect to web server
+    
+    // Create semaphores and queues
     for (int i = 0; i < STATE_SIZE; i++) {
     xBinarySemaphoreLEDState[i] = xSemaphoreCreateBinary();
     xBinarySemaphoreNEOState[i] = xSemaphoreCreateBinary();
